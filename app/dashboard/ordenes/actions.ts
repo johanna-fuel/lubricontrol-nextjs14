@@ -22,7 +22,14 @@ export async function createOrder(formData: FormData) {
   const { data: vehicle } = await supabase.from("vehicles").select("id, customer_id, current_mileage").eq("id",vehicleId).single();
   if (!vehicle || vehicle.customer_id !== customerId) redirect(url(returnPath,"error","El vehículo seleccionado no pertenece al cliente indicado."));
 
-  const serviceIds=[...new Set(servicesRequested.map((l)=>l.id))], productIds=[...new Set(productsRequested.map((l)=>l.id))];
+  const serviceIds = Array.from(
+    new Set(servicesRequested.map((line) => line.id))
+  );
+
+  const productIds = Array.from(
+    new Set(productsRequested.map((line) => line.id))
+  );
+  
   let serviceRows: { id: string; price: number | string; active: boolean }[] = [];
   let productRows: { id: string; sale_price: number | string; stock: number | string; active: boolean }[] = [];
   if (serviceIds.length) {
