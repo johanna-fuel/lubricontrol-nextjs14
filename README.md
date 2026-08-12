@@ -35,3 +35,25 @@ Aplicación académica full-stack para administrar clientes, vehículos, órdene
 
 ## Seguridad
 Nunca subir `.env.local` a GitHub. Las políticas RLS de `schema.sql` son iniciales y se endurecerán por rol en una etapa posterior.
+
+## CRUD de clientes
+
+Rutas privadas añadidas:
+
+- `/dashboard/clientes`: listado y búsqueda con `useState`.
+- `/dashboard/clientes/nuevo`: alta mediante Server Action.
+- `/dashboard/clientes/[id]`: detalle dinámico y lectura de vehículos relacionados.
+- `/dashboard/clientes/[id]/editar`: actualización mediante Server Action.
+- Eliminación mediante Server Action desde el detalle.
+
+El CRUD usa la tabla `public.customers` ya definida en `supabase/schema.sql` y las políticas RLS iniciales para usuarios autenticados.
+
+## Avance 2 — CRUD de vehículos
+
+- Listado privado de vehículos con búsqueda por placa, marca, modelo, cliente o identificación.
+- Alta de vehículo asociándolo obligatoriamente a un cliente.
+- Detalle dinámico `/dashboard/vehiculos/[id]`.
+- Edición y eliminación mediante Server Actions.
+- Acceso para registrar un vehículo directamente desde el detalle del cliente.
+- Relación `customers (1) -> (N) vehicles` utilizando `vehicles.customer_id`.
+- Validaciones de placa única, año y kilometraje.
