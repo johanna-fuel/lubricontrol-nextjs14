@@ -1,6 +1,6 @@
 # LubriControl
 
-Aplicación académica full-stack para administrar clientes, vehículos, órdenes de servicio, productos, técnicos y cobros de una lubricadora.
+Aplicación académica full-stack para administrar clientes, vehículos, catálogos de productos/servicios y órdenes de servicio de una lubricadora.
 
 ## Stack
 - Next.js 14 App Router
@@ -12,48 +12,31 @@ Aplicación académica full-stack para administrar clientes, vehículos, órdene
 ## Inicio local
 1. `npm install`
 2. Copiar `.env.example` como `.env.local`
-3. Crear proyecto en Supabase y pegar URL y clave pública
-4. Ejecutar `supabase/schema.sql` en el SQL Editor de Supabase
-5. `npm run dev`
+3. Configurar `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+4. Ejecutar `supabase/schema.sql` en un proyecto nuevo de Supabase
+5. Si ya tenías el esquema inicial, ejecutar `supabase/002_catalogos_ordenes.sql`
+6. `npm run dev`
+
+## Funcionalidades implementadas
+- Auth con correo y contraseña
+- CRUD de clientes
+- CRUD de vehículos y relación cliente → vehículos
+- CRUD de catálogo de servicios
+- CRUD de catálogo de productos
+- Órdenes de servicio con cliente, vehículo, técnico, servicios y productos
+- Cálculo de total en cliente y validación/recalculo en servidor
+- Estados de orden: pendiente, asignada, en proceso, finalizada, entregada y cancelada
+- Búsqueda/filtros con `useState`
+- Dashboard con conteos reales
+- RLS inicial para usuarios autenticados
+
+## Flujo principal
+Cliente → Vehículo → Orden → Servicios/Productos → Técnico → Estado → Cobro (siguiente etapa)
 
 ## Roles
 - `admin`: configuración y acceso general
 - `receptionist`: clientes, vehículos, órdenes y cobros
 - `technician`: órdenes asignadas y actualización de estados
 
-## Alcance MVP
-- Auth con correo y contraseña
-- Dos o más roles
-- Rutas públicas y privadas
-- Clientes y vehículos
-- Catálogo de productos y servicios
-- Órdenes de servicio con detalle
-- Asignación de técnico
-- Cobro interno
-- API externa vehicular
-- Deploy en Vercel
-
 ## Seguridad
-Nunca subir `.env.local` a GitHub. Las políticas RLS de `schema.sql` son iniciales y se endurecerán por rol en una etapa posterior.
-
-## CRUD de clientes
-
-Rutas privadas añadidas:
-
-- `/dashboard/clientes`: listado y búsqueda con `useState`.
-- `/dashboard/clientes/nuevo`: alta mediante Server Action.
-- `/dashboard/clientes/[id]`: detalle dinámico y lectura de vehículos relacionados.
-- `/dashboard/clientes/[id]/editar`: actualización mediante Server Action.
-- Eliminación mediante Server Action desde el detalle.
-
-El CRUD usa la tabla `public.customers` ya definida en `supabase/schema.sql` y las políticas RLS iniciales para usuarios autenticados.
-
-## Avance 2 — CRUD de vehículos
-
-- Listado privado de vehículos con búsqueda por placa, marca, modelo, cliente o identificación.
-- Alta de vehículo asociándolo obligatoriamente a un cliente.
-- Detalle dinámico `/dashboard/vehiculos/[id]`.
-- Edición y eliminación mediante Server Actions.
-- Acceso para registrar un vehículo directamente desde el detalle del cliente.
-- Relación `customers (1) -> (N) vehicles` utilizando `vehicles.customer_id`.
-- Validaciones de placa única, año y kilometraje.
+Nunca subir `.env.local` a GitHub. Las políticas RLS actuales son deliberadamente amplias para el MVP académico y deben endurecerse por rol antes del cierre del proyecto.

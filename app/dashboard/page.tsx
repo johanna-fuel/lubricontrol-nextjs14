@@ -2,35 +2,5 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/app/auth/actions";
 import Link from "next/link";
-
-export default async function DashboardPage() {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login");
-
-  const [{ count: customerCount }, { count: vehicleCount }] = await Promise.all([
-    supabase.from("customers").select("id", { count: "exact", head: true }),
-    supabase.from("vehicles").select("id", { count: "exact", head: true }),
-  ]);
-
-  return (
-    <section>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="mt-2 text-slate-600">Sesión activa: {user.email}</p>
-        </div>
-        <form action={logout}><button className="rounded border px-4 py-2">Cerrar sesión</button></form>
-      </div>
-      <div className="mt-8 grid gap-4 md:grid-cols-3">
-        <article className="rounded-xl border bg-white p-6"><p className="text-sm text-slate-500">Clientes registrados</p><p className="mt-2 text-3xl font-bold">{customerCount ?? 0}</p></article>
-        <article className="rounded-xl border bg-white p-6"><p className="text-sm text-slate-500">Vehículos registrados</p><p className="mt-2 text-3xl font-bold">{vehicleCount ?? 0}</p></article>
-        <article className="rounded-xl border bg-white p-6"><p className="text-sm text-slate-500">Órdenes pendientes</p><p className="mt-2 text-3xl font-bold">0</p></article>
-      </div>
-      <div className="mt-8 flex flex-wrap gap-3">
-        <Link href="/dashboard/clientes" className="inline-flex rounded-lg bg-slate-900 px-4 py-2.5 font-medium text-white">Gestionar clientes</Link>
-        <Link href="/dashboard/vehiculos" className="inline-flex rounded-lg border bg-white px-4 py-2.5 font-medium">Gestionar vehículos</Link>
-      </div>
-    </section>
-  );
-}
+export default async function DashboardPage(){const supabase=createClient();const{data:{user}}=await supabase.auth.getUser();if(!user)redirect("/auth/login");const[{count:customerCount},{count:vehicleCount},{count:orderCount},{count:pendingCount},{count:productCount}]=await Promise.all([supabase.from("customers").select("id",{count:"exact",head:true}),supabase.from("vehicles").select("id",{count:"exact",head:true}),supabase.from("service_orders").select("id",{count:"exact",head:true}),supabase.from("service_orders").select("id",{count:"exact",head:true}).in("status",["pending","assigned","in_progress"]),supabase.from("products").select("id",{count:"exact",head:true}).eq("active",true)]);return <section><div className="flex items-center justify-between"><div><h1 className="text-3xl font-bold">Dashboard</h1><p className="mt-2 text-slate-600">Sesión activa: {user.email}</p></div><form action={logout}><button className="rounded border px-4 py-2">Cerrar sesión</button></form></div><div className="mt-8 grid gap-4 md:grid-cols-5"><Card label="Clientes" value={customerCount}/><Card label="Vehículos" value={vehicleCount}/><Card label="Órdenes" value={orderCount}/><Card label="En atención" value={pendingCount}/><Card label="Productos activos" value={productCount}/></div><div className="mt-8 flex flex-wrap gap-3"><Link href="/dashboard/ordenes/nueva" className="inline-flex rounded-lg bg-slate-900 px-4 py-2.5 font-medium text-white">+ Nueva orden</Link><Link href="/dashboard/ordenes" className="inline-flex rounded-lg border bg-white px-4 py-2.5 font-medium">Órdenes</Link><Link href="/dashboard/clientes" className="inline-flex rounded-lg border bg-white px-4 py-2.5 font-medium">Clientes</Link><Link href="/dashboard/vehiculos" className="inline-flex rounded-lg border bg-white px-4 py-2.5 font-medium">Vehículos</Link><Link href="/dashboard/servicios" className="inline-flex rounded-lg border bg-white px-4 py-2.5 font-medium">Servicios</Link><Link href="/dashboard/productos" className="inline-flex rounded-lg border bg-white px-4 py-2.5 font-medium">Productos</Link></div></section>}
+function Card({label,value}:{label:string;value:number|null}){return <article className="rounded-xl border bg-white p-5"><p className="text-sm text-slate-500">{label}</p><p className="mt-2 text-3xl font-bold">{value??0}</p></article>}

@@ -34,6 +34,7 @@ export default async function VehicleDetailPage({
           <p className="mt-1 text-slate-600">{vehicle.brand} {vehicle.model}</p>
         </div>
         <div className="flex gap-2">
+          <Link href={`/dashboard/ordenes/nueva?customer_id=${customer?.id ?? ""}&vehicle_id=${vehicle.id}`} className="rounded-lg bg-slate-900 px-4 py-2 font-medium text-white">+ Nueva orden</Link>
           <Link href={`/dashboard/vehiculos/${vehicle.id}/editar`} className="rounded-lg border bg-white px-4 py-2 font-medium">Editar</Link>
           <form action={remove}>
             <button className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 font-medium text-red-700">Eliminar</button>
