@@ -48,7 +48,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
         {canManageCatalogs(role) && <Link href="/dashboard/servicios" className="inline-flex rounded-lg border bg-white px-4 py-2.5 font-medium">Servicios</Link>}
         {canManageCatalogs(role) && <Link href="/dashboard/productos" className="inline-flex rounded-lg border bg-white px-4 py-2.5 font-medium">Productos</Link>}
         {role === "admin" && <Link href="/dashboard/usuarios" className="inline-flex rounded-lg border bg-white px-4 py-2.5 font-medium">Usuarios y roles</Link>}
-        <Link href="/consulta-vin" className="inline-flex rounded-lg border bg-white px-4 py-2.5 font-medium">API externa VIN</Link>
+        <Link href="/consulta-vehiculo" className="inline-flex rounded-lg border bg-white px-4 py-2.5 font-medium">Consulta vehicular SRI</Link>
       </div>
     </section>
   );

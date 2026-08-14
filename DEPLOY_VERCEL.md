@@ -115,7 +115,7 @@ Prueba desde la URL de Vercel, no desde localhost:
 
 - `/`
 - `/servicios`
-- `/consulta-vin`
+- `/consulta-vehiculo`
 - registro/login
 
 ### Administrador
@@ -162,7 +162,7 @@ Captura al menos:
 2. Supabase mostrando tablas/relaciones o RLS.
 3. Orden finalizada con productos/servicios.
 4. Comprobante/cobro.
-5. API externa VIN.
+5. Consulta vehicular externa SRI.
 6. Vercel con deployment exitoso.
 
 El README exige al menos tres; puedes incluir más.
@@ -187,7 +187,7 @@ Orden sugerido:
 - [ ] Vercel responde por HTTPS.
 - [ ] Auth funciona en producción.
 - [ ] RLS probado con los tres roles.
-- [ ] API VIN funciona y maneja errores.
+- [ ] Consulta vehicular SRI funciona con una placa/RAMV/CPN válida y maneja errores o indisponibilidad del servicio externo.
 - [ ] README tiene URL, screenshots, credenciales demo y autor.
 - [ ] Video dura 15 minutos o más y su enlace funciona.
 

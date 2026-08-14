@@ -11,7 +11,7 @@ export async function Navbar() {
         <Link href="/" className="text-xl font-bold">LubriControl</Link>
         <div className="flex flex-wrap items-center justify-end gap-4 text-sm">
           <Link href="/servicios">Servicios</Link>
-          <Link href="/consulta-vin">Consulta VIN</Link>
+          <Link href="/consulta-vehiculo">Consulta vehicular</Link>
           {!user && <Link href="/auth/login">Ingresar</Link>}
           {user && role && (
             <>

@@ -26,7 +26,7 @@ Agregar antes de la entrega al menos 3 capturas en `docs/screenshots/`:
 - Supabase PostgreSQL
 - Supabase Auth con cookies SSR (`@supabase/ssr`)
 - Row Level Security (RLS)
-- API REST externa NHTSA vPIC
+- consulta vehicular externa mediante servicios usados por SRI en Línea (Ecuador)
 - Git + GitHub
 - Vercel
 
@@ -130,7 +130,7 @@ El consumo de inventario se ejecuta en PostgreSQL de forma transaccional e idemp
 
 - `/` — Inicio.
 - `/servicios` — Catálogo público de servicios.
-- `/consulta-vin` — Consumo de API REST externa NHTSA vPIC.
+- `/consulta-vehiculo` — Consulta vehicular externa por placa, RAMV o CPN mediante servicios usados por SRI en Línea (Ecuador).
 - `/auth/login` — Inicio de sesión.
 - `/auth/register` — Registro.
 
@@ -150,23 +150,25 @@ Ruta dinámica principal:
 
 ## API REST externa
 
-La ruta `/consulta-vin` consume la API pública NHTSA vPIC con `fetch` y `async/await` desde un Server Component.
+La ruta `/consulta-vehiculo` consume, con `fetch` y `async/await` desde un Server Component, un endpoint JSON utilizado por SRI en Línea para consultar información vehicular por placa, RAMV o CPN. Es una fuente externa independiente de Supabase. Se documenta como un servicio utilizado por el portal del SRI, no como una API pública formalmente documentada ni con garantía de estabilidad.
 
 La interfaz incluye:
 
-- consulta dinámica por VIN;
+- consulta dinámica por placa, RAMV o CPN;
+- campo abierto: la consulta no está limitada a una placa específica;
+- datos de referencia como placa, marca, modelo, año, país, RAMV/CPN, último año pagado y estado de exoneración cuando el SRI los devuelve;
 - renderizado del resultado;
 - manejo de respuestas HTTP no exitosas;
 - timeout;
 - manejo de fallos de conexión.
 
-La API es una fuente externa independiente de Supabase. La información puede ser limitada para vehículos no destinados al mercado estadounidense, por lo que no sustituye el registro manual.
+El servicio externo es independiente de Supabase y se utiliza únicamente como consulta informativa. Si el SRI no devuelve datos o el servicio está temporalmente indisponible, LubriControl mantiene el registro manual del vehículo como alternativa.
 
 ## Server Components, Client Components y Server Actions
 
 Ejemplos útiles para la sustentación:
 
-- **Server Component:** `/consulta-vin/page.tsx` o listados que consultan Supabase directamente.
+- **Server Component:** `/consulta-vehiculo/page.tsx` o listados que consultan Supabase directamente.
 - **Client Component:** `components/order-form.tsx`, `customer-search.tsx` o `vehicle-search.tsx`, que utilizan `useState`.
 - **Server Action:** acciones CRUD y de órdenes en `app/dashboard/**/actions.ts`.
 
@@ -299,7 +301,7 @@ Contraseña: [DEFINIR]
 ```text
 feat: agrega roles y politicas RLS por perfil
 feat: agrega gestion administrativa de usuarios
-feat: integra API externa NHTSA vPIC
+feat: integra consulta vehicular externa con SRI Ecuador
 fix: protege server actions por rol
 security: restringe catalogos cobros y ordenes por RLS
 docs: completa README academico
