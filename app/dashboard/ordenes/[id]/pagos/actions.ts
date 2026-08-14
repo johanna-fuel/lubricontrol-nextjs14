@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { requireRoles } from "@/lib/auth/permissions";
 
 const paymentMethods = new Set(["cash", "card", "transfer", "other"]);
 
@@ -23,11 +23,7 @@ export async function registerPayment(orderId: string, formData: FormData) {
   if (!paymentMethods.has(method)) redirect(url(path, "error", "Forma de pago no válida."));
   if (!Number.isFinite(amount) || amount <= 0) redirect(url(path, "error", "El valor del cobro debe ser mayor que cero."));
 
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login");
+  const { supabase, user } = await requireRoles(["admin", "receptionist"]);
 
   const { data: order } = await supabase
     .from("service_orders")
@@ -67,11 +63,7 @@ export async function registerPayment(orderId: string, formData: FormData) {
 
 export async function deletePayment(orderId: string, paymentId: string) {
   const path = `/dashboard/ordenes/${orderId}/pagos`;
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login");
+  const { supabase, user } = await requireRoles(["admin", "receptionist"]);
 
   const { data: order } = await supabase.from("service_orders").select("status").eq("id", orderId).single();
   if (!order) redirect(url("/dashboard/ordenes", "error", "La orden no existe."));

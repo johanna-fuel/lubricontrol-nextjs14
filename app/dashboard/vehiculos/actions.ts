@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { requireRoles } from "@/lib/auth/permissions";
 
 function text(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -12,14 +12,8 @@ function vehicleUrl(path: string, type: "error" | "message", value: string) {
   return `${path}?${type}=${encodeURIComponent(value)}`;
 }
 
-async function requireUser() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/auth/login");
-  return { supabase, user };
+async function requireReception() {
+  return requireRoles(["admin", "receptionist"]);
 }
 
 function parseOptionalInteger(value: string, label: string) {
@@ -59,7 +53,7 @@ export async function createVehicle(formData: FormData) {
     redirect(vehicleUrl(returnPath, "error", "El kilometraje no puede ser negativo."));
   }
 
-  const { supabase } = await requireUser();
+  const { supabase } = await requireReception();
   const { data, error } = await supabase
     .from("vehicles")
     .insert({
@@ -114,7 +108,7 @@ export async function updateVehicle(id: string, formData: FormData) {
     redirect(vehicleUrl(editPath, "error", "El kilometraje no puede ser negativo."));
   }
 
-  const { supabase } = await requireUser();
+  const { supabase } = await requireReception();
   const { data: previousVehicle } = await supabase
     .from("vehicles")
     .select("customer_id")
@@ -152,7 +146,7 @@ export async function updateVehicle(id: string, formData: FormData) {
 }
 
 export async function deleteVehicle(id: string) {
-  const { supabase } = await requireUser();
+  const { supabase } = await requireReception();
   const { data: vehicle } = await supabase
     .from("vehicles")
     .select("customer_id")

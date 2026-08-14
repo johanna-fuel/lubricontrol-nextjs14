@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { deleteOrder, deliverOrder, finalizeOrder } from "../actions";
+import { requireActiveProfile, canOperateReception } from "@/lib/auth/permissions";
+import { deleteOrder, deliverOrder, finalizeOrder, startOrder } from "../actions";
 
 const labels: Record<string, string> = {
   pending: "Pendiente",
@@ -19,11 +19,8 @@ export default async function OrderDetailPage({
   params: { id: string };
   searchParams: { error?: string; message?: string };
 }) {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login");
+  const { supabase, profile } = await requireActiveProfile();
+  const reception = canOperateReception(profile.role);
 
   const [{ data: order }, { data: serviceLines }, { data: productLines }, { data: payments }] = await Promise.all([
     supabase
@@ -46,11 +43,13 @@ export default async function OrderDetailPage({
   const paid = (payments ?? []).reduce((sum, payment) => sum + Number(payment.amount), 0);
   const remaining = Math.max(0, Number(order.total) - paid);
   const remove = deleteOrder.bind(null, order.id);
+  const start = startOrder.bind(null, order.id);
   const finalize = finalizeOrder.bind(null, order.id);
   const deliver = deliverOrder.bind(null, order.id);
-  const editable = ["pending", "assigned", "in_progress", "cancelled"].includes(order.status) && !order.inventory_applied;
+  const editable = reception && ["pending", "assigned", "in_progress", "cancelled"].includes(order.status) && !order.inventory_applied;
+  const canStart = ["pending", "assigned"].includes(order.status) && !order.inventory_applied;
   const canFinalize = ["in_progress", "completed"].includes(order.status) && !order.inventory_applied;
-  const canDeliver = order.status === "completed" && order.inventory_applied && remaining <= 0.00001;
+  const canDeliver = reception && order.status === "completed" && order.inventory_applied && remaining <= 0.00001;
 
   return (
     <section className="space-y-6">
@@ -70,12 +69,17 @@ export default async function OrderDetailPage({
               Editar / estado
             </Link>
           )}
+          {canStart && (
+            <form action={start}>
+              <button className="rounded-lg bg-blue-700 px-4 py-2 font-medium text-white">Iniciar trabajo</button>
+            </form>
+          )}
           {canFinalize && (
             <form action={finalize}>
               <button className="rounded-lg bg-emerald-700 px-4 py-2 font-medium text-white">Finalizar y descontar stock</button>
             </form>
           )}
-          {order.status === "completed" && (
+          {reception && order.status === "completed" && (
             <Link href={`/dashboard/ordenes/${order.id}/pagos`} className="rounded-lg bg-slate-900 px-4 py-2 font-medium text-white">
               Registrar cobro
             </Link>
@@ -90,7 +94,7 @@ export default async function OrderDetailPage({
               <button className="rounded-lg bg-emerald-700 px-4 py-2 font-medium text-white">Marcar entregada</button>
             </form>
           )}
-          {["pending", "cancelled"].includes(order.status) && !order.inventory_applied && (
+          {reception && ["pending", "cancelled"].includes(order.status) && !order.inventory_applied && (
             <form action={remove}>
               <button className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 font-medium text-red-700">Eliminar</button>
             </form>
@@ -176,7 +180,7 @@ export default async function OrderDetailPage({
       <div className="flex flex-wrap gap-3">
         <Link href={`/dashboard/clientes/${customer?.id}`} className="rounded-lg border bg-white px-4 py-2">Abrir cliente</Link>
         <Link href={`/dashboard/vehiculos/${vehicle?.id}`} className="rounded-lg border bg-white px-4 py-2">Abrir vehículo</Link>
-        {(order.status === "completed" || order.status === "delivered") && (
+        {reception && (order.status === "completed" || order.status === "delivered") && (
           <Link href={`/dashboard/ordenes/${order.id}/pagos`} className="rounded-lg border bg-white px-4 py-2">Cobros</Link>
         )}
       </div>

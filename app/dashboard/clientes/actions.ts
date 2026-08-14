@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { requireRoles } from "@/lib/auth/permissions";
 
 function text(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -12,14 +12,8 @@ function customerUrl(path: string, type: "error" | "message", value: string) {
   return `${path}?${type}=${encodeURIComponent(value)}`;
 }
 
-async function requireUser() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/auth/login");
-  return { supabase, user };
+async function requireReception() {
+  return requireRoles(["admin", "receptionist"]);
 }
 
 export async function createCustomer(formData: FormData) {
@@ -37,7 +31,7 @@ export async function createCustomer(formData: FormData) {
     redirect(customerUrl("/dashboard/clientes/nuevo", "error", "La identificación es obligatoria."));
   }
 
-  const { supabase, user } = await requireUser();
+  const { supabase, user } = await requireReception();
   const { error } = await supabase.from("customers").insert({
     full_name: fullName,
     identification,
@@ -69,7 +63,7 @@ export async function updateCustomer(id: string, formData: FormData) {
     redirect(customerUrl(`/dashboard/clientes/${id}/editar`, "error", "Nombre e identificación son obligatorios."));
   }
 
-  const { supabase } = await requireUser();
+  const { supabase } = await requireReception();
   const { error } = await supabase
     .from("customers")
     .update({
@@ -94,7 +88,7 @@ export async function updateCustomer(id: string, formData: FormData) {
 }
 
 export async function deleteCustomer(id: string) {
-  const { supabase } = await requireUser();
+  const { supabase } = await requireReception();
   const { error } = await supabase.from("customers").delete().eq("id", id);
 
   if (error) {

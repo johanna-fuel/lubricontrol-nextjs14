@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { requireActiveProfile, requireRoles } from "@/lib/auth/permissions";
 
 type RequestedLine = { id: string; quantity: number };
 const editableStatuses = new Set(["pending", "assigned", "in_progress", "cancelled"]);
@@ -16,13 +16,12 @@ function url(path: string, type: "error" | "message", value: string) {
   return `${path}${separator}${type}=${encodeURIComponent(value)}`;
 }
 
-async function requireUser() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login");
-  return { supabase, user };
+async function requireReception() {
+  return requireRoles(["admin", "receptionist"]);
+}
+
+async function requireAnyActiveUser() {
+  return requireActiveProfile();
 }
 
 function parseLines(value: string): RequestedLine[] {
@@ -64,7 +63,7 @@ export async function createOrder(formData: FormData) {
     redirect(url(returnPath, "error", "El kilometraje debe ser un entero positivo."));
   }
 
-  const { supabase, user } = await requireUser();
+  const { supabase, user } = await requireReception();
   const { data: vehicle } = await supabase
     .from("vehicles")
     .select("id, customer_id, current_mileage")
@@ -187,7 +186,7 @@ export async function updateOrder(id: string, formData: FormData) {
     redirect(url(path, "error", "Kilometraje no válido."));
   }
 
-  const { supabase } = await requireUser();
+  const { supabase } = await requireReception();
   const { data: current } = await supabase
     .from("service_orders")
     .select("vehicle_id, status, inventory_applied")
@@ -230,8 +229,19 @@ export async function updateOrder(id: string, formData: FormData) {
   redirect(url(`/dashboard/ordenes/${id}`, "message", "Orden actualizada correctamente."));
 }
 
+export async function startOrder(id: string) {
+  const { supabase } = await requireAnyActiveUser();
+  const { error } = await supabase.rpc("start_assigned_order", { p_order_id: id });
+  if (error) redirect(url(`/dashboard/ordenes/${id}`, "error", error.message));
+
+  revalidatePath(`/dashboard/ordenes/${id}`);
+  revalidatePath("/dashboard/ordenes");
+  revalidatePath("/dashboard");
+  redirect(url(`/dashboard/ordenes/${id}`, "message", "Orden iniciada correctamente."));
+}
+
 export async function finalizeOrder(id: string) {
-  const { supabase } = await requireUser();
+  const { supabase } = await requireAnyActiveUser();
   const { error } = await supabase.rpc("finalize_service_order", { p_order_id: id });
   if (error) redirect(url(`/dashboard/ordenes/${id}`, "error", error.message));
 
@@ -243,7 +253,7 @@ export async function finalizeOrder(id: string) {
 }
 
 export async function deliverOrder(id: string) {
-  const { supabase } = await requireUser();
+  const { supabase } = await requireReception();
   const { error } = await supabase.rpc("deliver_service_order", { p_order_id: id });
   if (error) redirect(url(`/dashboard/ordenes/${id}`, "error", error.message));
 
@@ -255,7 +265,7 @@ export async function deliverOrder(id: string) {
 }
 
 export async function deleteOrder(id: string) {
-  const { supabase } = await requireUser();
+  const { supabase } = await requireReception();
   const { data: order } = await supabase
     .from("service_orders")
     .select("status, inventory_applied")
