@@ -1,5 +1,5 @@
 # LubriControl
-
+![lubricontrol inicio](./capturas/lubri1.png)
 Aplicación web académica full-stack para gestionar el flujo operativo básico de una lubricadora: clientes, vehículos, servicios, productos, órdenes de trabajo, consumo de inventario, cobros y comprobante interno.
 
 > Proyecto Integrador — Aplicaciones Web. Stack obligatorio: Next.js 14, TypeScript, Tailwind CSS, Supabase (PostgreSQL + Auth + RLS) y despliegue en Vercel.
